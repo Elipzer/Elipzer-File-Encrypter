@@ -15,7 +15,7 @@
 unsigned char getHexChar(std::string value)
 {
 	std::stringstream ss;
-	unsigned int x;
+	uint32_t x;
 	ss << std::hex << value;
 	ss >> x;
 	return (unsigned char)x;
@@ -25,12 +25,12 @@ std::vector<unsigned char> getHexChars(std::string values)
 {
 	std::vector<unsigned char> ret;
 	ret.reserve(values.size() / 2);
-	for (unsigned int i = 0; i < values.size() / 2; i++)
+	for (uint32_t i = 0; i < values.size() / 2; i++)
 		ret.push_back(getHexChar(values.substr(i * 2, 2)));
 	return ret;
 }
 
-void getMoveKey(const std::string& hash, std::vector<unsigned char>& movekey, unsigned int rows)
+void getMoveKey(const std::string& hash, std::vector<unsigned char>& movekey, uint32_t rows)
 {
 	std::vector<unsigned char> slots;
 	slots.reserve(BYTE_BITS * rows);
@@ -42,7 +42,7 @@ void getMoveKey(const std::string& hash, std::vector<unsigned char>& movekey, un
 	movekey.clear();
 	movekey.reserve(BYTE_BITS * rows);
 
-	for (unsigned int i = 0; i < BYTE_BITS * rows; i++)
+	for (uint32_t i = 0; i < BYTE_BITS * rows; i++)
 	{
 		unsigned char dgstm = digest[i] % slots.size();
 		unsigned char slts = slots[dgstm];
@@ -51,18 +51,18 @@ void getMoveKey(const std::string& hash, std::vector<unsigned char>& movekey, un
 	}
 }
 
-std::vector<unsigned char> generateBits(unsigned char* bytes, unsigned int rows)
+std::vector<unsigned char> generateBits(unsigned char* bytes, uint32_t rows)
 {
 	std::vector<unsigned char> bits;
 	bits.reserve(BYTE_BITS * rows);
 
-	for (unsigned int i = 0; i < BYTE_BITS * rows; i++)
+	for (uint32_t i = 0; i < BYTE_BITS * rows; i++)
 		bits.push_back(bytes[i / BYTE_BITS] & (BYTE_FIRST_BIT >> (i % BYTE_BITS)));
 	
 	return bits;
 }
 
-std::vector<unsigned char> generateEncryptedBytes(std::string& hash, unsigned char* bytes, unsigned int rows)
+std::vector<unsigned char> generateEncryptedBytes(std::string& hash, unsigned char* bytes, uint32_t rows)
 {
 	std::vector<unsigned char> bits = generateBits(bytes, rows);
 
@@ -74,27 +74,34 @@ std::vector<unsigned char> generateEncryptedBytes(std::string& hash, unsigned ch
 	std::vector<unsigned char> newBytes;
 	newBytes.resize(rows, 0x00);
 
-	for (unsigned int o = 0; o < rows; o++)
-		for (unsigned int u = 0; u < BYTE_BITS; u++)
+	for (uint32_t o = 0; o < rows; o++)
+		for (uint32_t u = 0; u < BYTE_BITS; u++)
 			newBytes[o] += ((bits[movekey[o * BYTE_BITS + u]] ? 1 : 0) * (BYTE_FIRST_BIT >> u));
 
 	return newBytes;
 }
 
-void encrypt(std::vector<unsigned char> data, std::string password, std::vector<unsigned char>& outBytes)
+void encrypt(std::vector<unsigned char> data, std::string password, std::vector<unsigned char>& outBytes, bool showPercent = false)
 {
-	const static unsigned int DEFAULT_ROWS = 4;
+	const static uint32_t DEFAULT_ROWS = 4;
 
 	std::string hash = sha256(password);
 	outBytes.reserve(data.size());
 
-	for (unsigned int i = 0; i < (unsigned int)(data.size() / DEFAULT_ROWS); i++)
+	uint32_t sz = (uint32_t)(data.size() / DEFAULT_ROWS);
+
+	for (uint32_t i = 0; i < sz; i++)
 	{
 		std::vector<unsigned char> encrypted = generateEncryptedBytes(hash, data.data() + i * DEFAULT_ROWS, DEFAULT_ROWS);
 		outBytes.insert(outBytes.end(), encrypted.begin(), encrypted.end());
+		if (showPercent)
+			std::cout << "\r" << (float)((int)(((float)i / (float)sz) * 10000)) / 100 << "% complete   ";
 	}
 
-	unsigned int extraEnd = data.size() % DEFAULT_ROWS;
+	if (showPercent)
+		std::cout << "\r100% complete   " << std::endl;
+
+	uint32_t extraEnd = data.size() % DEFAULT_ROWS;
 	if (extraEnd > 0)
 	{
 		std::vector<unsigned char> encrypted = generateEncryptedBytes(hash, data.data() + data.size() - extraEnd, extraEnd);
@@ -102,7 +109,7 @@ void encrypt(std::vector<unsigned char> data, std::string password, std::vector<
 	}
 }
 
-std::vector<unsigned char> generateDecryptedBytes(std::string& hash, unsigned char* bytes, unsigned int rows)
+std::vector<unsigned char> generateDecryptedBytes(std::string& hash, unsigned char* bytes, uint32_t rows)
 {
 	hash = sha256(hash);
 
@@ -121,20 +128,27 @@ std::vector<unsigned char> generateDecryptedBytes(std::string& hash, unsigned ch
 	return newBytes;
 }
 
-void decrypt(std::vector<unsigned char> data, std::string password, std::vector<unsigned char>& outBytes)
+void decrypt(std::vector<unsigned char> data, std::string password, std::vector<unsigned char>& outBytes, bool showPercent = false)
 {
-	const static unsigned int DEFAULT_ROWS = 4;
+	const static uint32_t DEFAULT_ROWS = 4;
 
 	std::string hash = sha256(password);
 	outBytes.reserve(data.size());
 
-	for (unsigned int i = 0; i < (unsigned int)(data.size() / DEFAULT_ROWS); i++)
+	uint32_t sz = (uint32_t)(data.size() / DEFAULT_ROWS);
+
+	for (uint32_t i = 0; i < sz; i++)
 	{
 		std::vector<unsigned char> decrypted = generateDecryptedBytes(hash, data.data() + i * DEFAULT_ROWS, DEFAULT_ROWS);
 		outBytes.insert(outBytes.end(), decrypted.begin(), decrypted.end());
+		if (showPercent)
+			std::cout << "\r" << (float)((int)(((float)i / (float)sz) * 10000)) / 100 << "% complete   ";
 	}
 
-	unsigned int extraEnd = data.size() % DEFAULT_ROWS;
+	if (showPercent)
+		std::cout << "\r100% complete   " << std::endl;
+
+	uint32_t extraEnd = data.size() % DEFAULT_ROWS;
 	if (extraEnd > 0)
 	{
 		std::vector<unsigned char> decrypted = generateDecryptedBytes(hash, data.data() + data.size() - extraEnd, extraEnd);
@@ -152,7 +166,7 @@ bool endswith(const std::string& fullString, const std::string& ending)
 
 int main(int argc, char *argv[])
 {
-	std::string name = "Elipzer Encrypter / Decrypter v 1.0.0";
+	std::string name = "Elipzer Encrypter / Decrypter v 1.0.1";
 
 	SetConsoleTitle(name.c_str());
 
@@ -178,7 +192,20 @@ int main(int argc, char *argv[])
 
 		std::cout << "Output File:" << std::endl << outFileName << std::endl << std::endl;
 
-		std::cout << "Password: " << std::endl;
+		std::string msg = "";
+
+		while (msg.size() == 0 || (tolower(msg[0]) != 'y' && tolower(msg[0]) != 'n'))
+		{
+			std::cout << "Would you like to have a percentage shown (slower)? (Y/n): ";
+			std::cin >> msg;
+		}
+
+		bool showPercentage = false;
+
+		if (tolower(msg[0]) == 'y')
+			showPercentage = true;
+
+		std::cout << std::endl << "Password: ";
 		std::string pass;
 		std::cin >> pass;
 
@@ -194,7 +221,11 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
-		decrypt(bytes, pass, outBytes);
+		std::cout << "Decryption in progress..." << std::endl << std::endl;
+
+		decrypt(bytes, pass, outBytes, true);
+
+		std::cout << "Decryption complete" << std::endl << std::endl;
 
 		if (!saveFileFromBuffer(outFileName, outBytes))
 		{
@@ -203,7 +234,7 @@ int main(int argc, char *argv[])
 			return -5;
 		}
 
-		std::cout << "Decryption Complete. Saved to " << outFileName << std::endl;
+		std::cout << "Saved to:" << std::endl << std::endl << outFileName << std::endl << std::endl;
 
 	}
 	else
@@ -216,7 +247,20 @@ int main(int argc, char *argv[])
 
 		std::cout << "Output File:" << std::endl << outFileName << std::endl << std::endl;
 
-		std::cout << "Password: " << std::endl;
+		std::string msg = "";
+
+		while (msg.size() == 0 || (tolower(msg[0]) != 'y' && tolower(msg[0]) != 'n'))
+		{
+			std::cout << "Would you like to have a percentage shown (slower)? (Y/n): ";
+			std::cin >> msg;
+		}
+
+		bool showPercentage = false;
+
+		if (tolower(msg[0]) == 'y')
+			showPercentage = true;
+
+		std::cout << std::endl << "Password: ";
 		std::string pass;
 		std::cin >> pass;
 
@@ -232,7 +276,11 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
-		encrypt(bytes, pass, outBytes);
+		std::cout << "Encryption in progress..." << std::endl << std::endl;
+
+		encrypt(bytes, pass, outBytes, true);
+
+		std::cout << "Encryption complete" << std::endl << std::endl;
 
 		if (!saveFileFromBuffer(outFileName, outBytes))
 		{
@@ -241,7 +289,7 @@ int main(int argc, char *argv[])
 			return -5;
 		}
 
-		std::cout << "Encryption Complete" << std::endl << std::endl << "Saved to:" << std::endl << std::endl << outFileName << std::endl << std::endl;
+		std::cout << "Saved to:" << std::endl << std::endl << outFileName << std::endl << std::endl;
 	}
 
 	system("PAUSE");
