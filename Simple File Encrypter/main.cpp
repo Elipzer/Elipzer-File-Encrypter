@@ -8,7 +8,6 @@
 
 //Steaming Soup Encryption / Decryption
 
-
 #define BYTE_BITS 8
 #define BYTE_FIRST_BIT 0x80
 
