@@ -191,19 +191,6 @@ int main(int argc, char *argv[])
 
 		std::cout << "Output File:" << std::endl << outFileName << std::endl << std::endl;
 
-		std::string msg = "";
-
-		while (msg.size() == 0 || (tolower(msg[0]) != 'y' && tolower(msg[0]) != 'n'))
-		{
-			std::cout << "Would you like to have a percentage shown (slower)? (Y/n): ";
-			std::cin >> msg;
-		}
-
-		bool showPercentage = false;
-
-		if (tolower(msg[0]) == 'y')
-			showPercentage = true;
-
 		std::cout << std::endl << "Password: ";
 		std::string pass;
 		std::cin >> pass;
@@ -245,19 +232,6 @@ int main(int argc, char *argv[])
 		std::string outFileName = fileName + extension;
 
 		std::cout << "Output File:" << std::endl << outFileName << std::endl << std::endl;
-
-		std::string msg = "";
-
-		while (msg.size() == 0 || (tolower(msg[0]) != 'y' && tolower(msg[0]) != 'n'))
-		{
-			std::cout << "Would you like to have a percentage shown (slower)? (Y/n): ";
-			std::cin >> msg;
-		}
-
-		bool showPercentage = false;
-
-		if (tolower(msg[0]) == 'y')
-			showPercentage = true;
 
 		std::cout << std::endl << "Password: ";
 		std::string pass;
