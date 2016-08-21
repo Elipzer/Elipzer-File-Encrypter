@@ -12,3 +12,7 @@ To use the file, you have to use command line arguments to specify the file that
 The program will detect whether it is encrypting or decrypting by the file extension.
 
 THERE IS NO WARNING FOR OVERWRITING FILES SO WATCH OUT BEFORE YOU ACCIDENTALLY ENCRYPT SOMETHING AND DECRYPT IT WITH THE WRONG PASSWORD AND ARE NOT ABLE TO GET IT BACK.
+
+For more information on how the algorithm works, see my Reddit Post.
+
+https://www.reddit.com/r/encryption/comments/4rn3fk/general_file_encrypter/
