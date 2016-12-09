@@ -39,13 +39,13 @@ The reason that 4 byte blocks are used is that a SHA-256 hash as a string has th
 
 For Example, the SHA-256 of "test"
 
-9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+    9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 Creates the values or digestints,
 
-0x9f 0x86 0xd0 0x81 0x88 0x4c 0x7d 0x65
-0x9a 0x2f 0xea 0xa0 0xc5 0x5a 0xd0 0x15
-0xa3 0xbf 0x4f 0x1b 0x2b 0x0b 0x82 0x2c
-0xd1 0x5d 0x6c 0x15 0xb0 0xf0 0x0a 0x08
+    0x9f 0x86 0xd0 0x81 0x88 0x4c 0x7d 0x65
+    0x9a 0x2f 0xea 0xa0 0xc5 0x5a 0xd0 0x15
+    0xa3 0xbf 0x4f 0x1b 0x2b 0x0b 0x82 0x2c
+    0xd1 0x5d 0x6c 0x15 0xb0 0xf0 0x0a 0x08
 These values then can be converted into indices for the MoveKey map by using the range of numbers from 0-31 inclusive to find the mapped values using the algorithm as follows:
 
 Create "DigestInts" with algorithm above
@@ -86,23 +86,23 @@ As explained previously, the MoveKey is essentially a map for the bytes. The fir
 For Example the following MoveKey:
 
 [
-18, 06, 03, 17, 15, 21, 09, 25,
-22, 16, 07, 23, 31, 24, 26, 20, 
-04, 29, 14, 30, 02, 12, 11, 27, 
-01, 13, 00, 19, 28, 10, 08, 05
+    18, 06, 03, 17, 15, 21, 09, 25,
+    22, 16, 07, 23, 31, 24, 26, 20, 
+    04, 29, 14, 30, 02, 12, 11, 27, 
+    01, 13, 00, 19, 28, 10, 08, 05
 ]
 And the bytes of a UTF-8 String, "test":
 
-t: 0 1 1 1 0 1 0 0
-e: 0 1 1 0 0 1 0 1
-s: 0 1 1 1 0 0 1 1
-t: 0 1 1 1 0 1 0 0
+    t: 0 1 1 1 0 1 0 0
+    e: 0 1 1 0 0 1 0 1
+    s: 0 1 1 1 0 0 1 1
+    t: 0 1 1 1 0 1 0 0
 Would produce the following "Scrambling" of Bytes:
 
-1 0 0 1 0 0 1 1
-0 0 1 1 0 0 1 1
-1 1 0 1 1 1 0 0
-1 0 0 1 0 1 1 0
+    1 0 0 1 0 0 1 1
+    0 0 1 1 0 0 1 1
+    1 1 0 1 1 1 0 0
+    1 0 0 1 0 1 1 0
 Which cannot be represented in UTF-8
 
 A specific mapping example in this would be that the 4th bit in the decrypted block (1) is mapped to the 18th bit in the encrypted block.
@@ -117,23 +117,23 @@ Now that you understand how the encryption works, decryption is fairly simple, i
 
 Using this, the scrambled bytes:
 
-1 0 0 1 0 0 1 1
-0 0 1 1 0 0 1 1
-1 1 0 1 1 1 0 0
-1 0 0 1 0 1 1 0
+    1 0 0 1 0 0 1 1
+    0 0 1 1 0 0 1 1
+    1 1 0 1 1 1 0 0
+    1 0 0 1 0 1 1 0
 can be mapped to the string "test":
 
-t: 0 1 1 1 0 1 0 0
-e: 0 1 1 0 0 1 0 1
-s: 0 1 1 1 0 0 1 1
-t: 0 1 1 1 0 1 0 0
+    t: 0 1 1 1 0 1 0 0
+    e: 0 1 1 0 0 1 0 1
+    s: 0 1 1 1 0 0 1 1
+    t: 0 1 1 1 0 1 0 0
 using the MoveKey:
 
 [
-18, 06, 03, 17, 15, 21, 09, 25,
-22, 16, 07, 23, 31, 24, 26, 20, 
-04, 29, 14, 30, 02, 12, 11, 27, 
-01, 13, 00, 19, 28, 10, 08, 05
+    18, 06, 03, 17, 15, 21, 09, 25,
+    22, 16, 07, 23, 31, 24, 26, 20, 
+    04, 29, 14, 30, 02, 12, 11, 27, 
+    01, 13, 00, 19, 28, 10, 08, 05
 ]
 You can convert the MoveKey into an InverseMoveKey if you would like using this algorithm:
 
