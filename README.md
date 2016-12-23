@@ -68,13 +68,13 @@ end Loop
 
 Pseudo Code:
 
-slots = [0, 1, 2, 3, 4, ... , 31];
-for (int i = 0; i < 32; i++) {
-    unsigned char slotindex = digestints[i] % slots.size();
-    unsigned char slotValue = slots[slotindex];
-    slots.removeAt(slotindex);
-    movekey.push(slotValue);
-}
+    slots = [0, 1, 2, 3, 4, ... , 31];
+    for (int i = 0; i < 32; i++) {
+        unsigned char slotindex = digestints[i] % slots.size();
+        unsigned char slotValue = slots[slotindex];
+        slots.removeAt(slotindex);
+        movekey.push(slotValue);
+    }
 At the end of this process, the move key will be an array of 32 integers from 0 - 31 inclusive.
 
 MoveKey > Map Bytes
@@ -85,12 +85,12 @@ As explained previously, the MoveKey is essentially a map for the bytes. The fir
 
 For Example the following MoveKey:
 
-[
-    18, 06, 03, 17, 15, 21, 09, 25,
-    22, 16, 07, 23, 31, 24, 26, 20, 
-    04, 29, 14, 30, 02, 12, 11, 27, 
-    01, 13, 00, 19, 28, 10, 08, 05
-]
+    [
+        18, 06, 03, 17, 15, 21, 09, 25,
+        22, 16, 07, 23, 31, 24, 26, 20, 
+        04, 29, 14, 30, 02, 12, 11, 27, 
+        01, 13, 00, 19, 28, 10, 08, 05
+    ]
 And the bytes of a UTF-8 String, "test":
 
     t: 0 1 1 1 0 1 0 0
@@ -129,12 +129,12 @@ can be mapped to the string "test":
     t: 0 1 1 1 0 1 0 0
 using the MoveKey:
 
-[
-    18, 06, 03, 17, 15, 21, 09, 25,
-    22, 16, 07, 23, 31, 24, 26, 20, 
-    04, 29, 14, 30, 02, 12, 11, 27, 
-    01, 13, 00, 19, 28, 10, 08, 05
-]
+    [
+        18, 06, 03, 17, 15, 21, 09, 25,
+        22, 16, 07, 23, 31, 24, 26, 20, 
+        04, 29, 14, 30, 02, 12, 11, 27, 
+        01, 13, 00, 19, 28, 10, 08, 05
+    ]
 You can convert the MoveKey into an InverseMoveKey if you would like using this algorithm:
 
 Create Array "InverseKey" containing 32 0s
@@ -149,11 +149,11 @@ end Loop
 
 Pseudo Code:
 
-inversekey = [0, 0, 0, 0, 0, ... , 0];//32 0s
-movekey = [MOVEKEY];
-for (int i = 0; i < 32; i++) {
-    inversekey[movekey[i]] = i;
-}
+    inversekey = [0, 0, 0, 0, 0, ... , 0];//32 0s
+    movekey = [MOVEKEY];
+    for (int i = 0; i < 32; i++) {
+        inversekey[movekey[i]] = i;
+    }
 You could use the InverseMoveKey to do the same mapping on the encrypted bits to get the decrypted bits if you would so like to.
 
 Simplified Version (AKA: TL;DR)
