@@ -48,14 +48,25 @@ Once this is finished, the Move Key will have 32 numbers from 0-31 that are "scr
 
 Note that the Move Key is one-to-one on [0,31]
 
+Example:
+Using previous hexidecimal numbers, the generated Move Key would be
+
+    [
+        31, 10, 29, 14, 26, 24, 23, 01,
+	12, 02, 19, 18, 27, 21, 15, 06,
+	05, 22, 17, 03, 16, 00, 04, 30,
+	08, 11, 07, 13, 09, 20, 25, 28
+    ]
+
 Pseudo Code For This Process:
 
+    hexnumbers = [...]
     movekey = [];
     slots = [0, 1, 2, 3, 4, ... , 31];
     for (int i = 0; i < 32; i++) {
-        unsigned char slotindex = digestints[i] % slots.size();
+        unsigned char slotIndex = hexnumbers[i] % slots.size();
         unsigned char slotValue = slots[slotindex];
-        slots.removeAt(slotindex);
+        slots.removeAt(slotIndex);
         movekey.push(slotValue);
     }
 
@@ -70,7 +81,7 @@ Using the bytes of a UTF-8 String, "test":
     s: 0 1 1 1 0 0 1 1
     t: 0 1 1 1 0 1 0 0
 
-And the Move Key
+And the Move Key (Note: NOT from previous example)
 
     [
         18, 06, 03, 17, 15, 21, 09, 25,
