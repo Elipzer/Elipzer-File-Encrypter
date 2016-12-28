@@ -1,73 +1,56 @@
 # Elipzer-File-Encrypter
-A simple file encryption program that allows for files to be encrypted using a simple password
+A simple file encryption program that can encrypt any file using a simple password.
 
-I created this because of someone hinting that they needed some sort of encryption program. I cannot guerentee any amount of security since I have not tested it against anything.
+I created this because of someone hinting that they needed some sort of encryption program. I cannot guarantee any amount of security since I have not tested it against anything.
 
 I used an algorithm that essentially scrambles up the bits in groups of four bytes and if there are any trailing bytes, they are scrambled up in the groups that they need to be whether that is 1, 2, or 3.
 
-Feel free to look over my code to see if you can come up with any improvements or changes that you think that could be made to the program to make it better.
-
 To use the file, you have to use command line arguments to specify the file that you would like to encrypt or decrypt.
 
-The program will detect whether it is encrypting or decrypting by the file extension.
+The program will detect whether it is encrypting or decrypting based on the file extension.
 
 THERE IS NO WARNING FOR OVERWRITING FILES SO WATCH OUT BEFORE YOU ACCIDENTALLY ENCRYPT SOMETHING AND DECRYPT IT WITH THE WRONG PASSWORD AND ARE NOT ABLE TO GET IT BACK.
 
-Here's how it works:
+Here's how it works.
 
-The Algorithm is as follows:
+To put it very simply, the program creates a key from the "password" that you supply and uses the key to remap the bytes inside of the target file thereby encrypting it. The reverse process can be used to decrypt the file.
 
-Password > SHA-256 Hash
+Here's how the algorithm works:
 
-First the password is converted into a SHA-256 Hash Value.
+#Encryption
 
-Encryption
+First the password is converted into a SHA-256 hash.
 
-Hash > Move Key
+Next, the hash is converted into a "Move Key"
 
-The current hash value is set to the SHA-256 of its string value.
+A Move Key is the map that determines where to move each byte of the file for the next 4 byte block.
 
-The new hash value is used to generate a "MoveKey"
+To generate the Move Key, the hash is split into 32 2-digit hexadecimal numbers.
 
-A MoveKey is a map where the key is the index of the source bit and the value is the index of the target bit.
+Example:
 
-MoveKey Used to Scramble
-
-The MoveKey is used to scramble the bytes in 4 byte blocks. (If there are not enough bytes for a 4 byte block, a move key can be generated for 3, 2, or 1 byte blocks as well)
-
-The reason that 4 byte blocks are used is that a SHA-256 hash as a string has the ability to create up to 32 numbers from 0x00 to 0xFF if you split the string into 2 char segments.
-
-For Example, the SHA-256 of "test"
+SHA-256 of "test"
 
     9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
-Creates the values or digestints,
+
+Split into 32 hexidecimal numbers:
 
     0x9f 0x86 0xd0 0x81 0x88 0x4c 0x7d 0x65
     0x9a 0x2f 0xea 0xa0 0xc5 0x5a 0xd0 0x15
     0xa3 0xbf 0x4f 0x1b 0x2b 0x0b 0x82 0x2c
     0xd1 0x5d 0x6c 0x15 0xb0 0xf0 0x0a 0x08
-These values then can be converted into indices for the MoveKey map by using the range of numbers from 0-31 inclusive to find the mapped values using the algorithm as follows:
 
-Create "DigestInts" with algorithm above
+Then create a list of the integers from 0-31 inclusive. This list will be called slots.
 
-Create Array "slots" with values 0-31 inclusive
+Then, loop through each hexidecimal number from the Move Key and pop the value of slots at the index of the hexidecimal number modulo the length of slots into the next index of the Move Key.
 
-Create Array "MoveKey" with no values
+Once this is finished, the Move Key will have 32 numbers from 0-31 that are "scrambled" based on the password.
 
-Loop from i = (0 - 31) inclusive doing:
+Note that the Move Key is one-to-one on [0,31]
 
-Set Temporary "slotindex" to the value of ("DigestInts" at i) modulo the size of slots
+Pseudo Code For This Process:
 
-Set Temporary "slotvalue" to the value of ("slots" at "slotindex")
-
-Remove the value at "slotindex" from slots
-
-Append the value "slotvalue" to "MoveKey"
-
-end Loop
-
-Pseudo Code:
-
+    movekey = [];
     slots = [0, 1, 2, 3, 4, ... , 31];
     for (int i = 0; i < 32; i++) {
         unsigned char slotindex = digestints[i] % slots.size();
@@ -75,15 +58,19 @@ Pseudo Code:
         slots.removeAt(slotindex);
         movekey.push(slotValue);
     }
-At the end of this process, the move key will be an array of 32 integers from 0 - 31 inclusive.
 
-MoveKey > Map Bytes
+Next, take the values of each byte in the four byte block and map them to the encrypted four byte block using the Move Key as a map where the index of the Move Key is the index of the bit in the inBytes and the value at that index is the index of the bit in the outBytes.
 
-The actual "scrambling" or more so "mapping" takes place by using the generated MoveKey array and using it to move the initial "not-encrypted" bytes to their new "encrypted" locations.
+Example:
 
-As explained previously, the MoveKey is essentially a map for the bytes. The first byte will be mapped in the new block to the position at MoveKey[0]
+Using the bytes of a UTF-8 String, "test":
 
-For Example the following MoveKey:
+    t: 0 1 1 1 0 1 0 0
+    e: 0 1 1 0 0 1 0 1
+    s: 0 1 1 1 0 0 1 1
+    t: 0 1 1 1 0 1 0 0
+
+And the Move Key
 
     [
         18, 06, 03, 17, 15, 21, 09, 25,
@@ -91,83 +78,107 @@ For Example the following MoveKey:
         04, 29, 14, 30, 02, 12, 11, 27, 
         01, 13, 00, 19, 28, 10, 08, 05
     ]
-And the bytes of a UTF-8 String, "test":
 
-    t: 0 1 1 1 0 1 0 0
-    e: 0 1 1 0 0 1 0 1
-    s: 0 1 1 1 0 0 1 1
-    t: 0 1 1 1 0 1 0 0
-Would produce the following "Scrambling" of Bytes:
+The bytes in "test" get mapped to this:
 
     1 0 0 1 0 0 1 1
     0 0 1 1 0 0 1 1
     1 1 0 1 1 1 0 0
     1 0 0 1 0 1 1 0
-Which cannot be represented in UTF-8
-
-A specific mapping example in this would be that the 4th bit in the decrypted block (1) is mapped to the 18th bit in the encrypted block.
-
-Repeat
-
-Repeating this process (From Hash > MoveKey > Map Bytes) Allows for Unlimited numbers of MoveKeys to be generated and files of an unlimited size to have their bytes "scrambled" or more so "remapped"
-
-Decryption
-
-Now that you understand how the encryption works, decryption is fairly simple, it is the opposite of encryption. Instead of mapping the bits from their indices to new encrypted locations using the move key, you can use the indices of the values in the MoveKey as the destination bit indices and the values in the MoveKey as the indices of the encrypted bits.
-
-Using this, the scrambled bytes:
-
-    1 0 0 1 0 0 1 1
-    0 0 1 1 0 0 1 1
-    1 1 0 1 1 1 0 0
-    1 0 0 1 0 1 1 0
-can be mapped to the string "test":
-
-    t: 0 1 1 1 0 1 0 0
-    e: 0 1 1 0 0 1 0 1
-    s: 0 1 1 1 0 0 1 1
-    t: 0 1 1 1 0 1 0 0
-using the MoveKey:
-
-    [
-        18, 06, 03, 17, 15, 21, 09, 25,
-        22, 16, 07, 23, 31, 24, 26, 20, 
-        04, 29, 14, 30, 02, 12, 11, 27, 
-        01, 13, 00, 19, 28, 10, 08, 05
-    ]
-You can convert the MoveKey into an InverseMoveKey if you would like using this algorithm:
-
-Create Array "InverseKey" containing 32 0s
-
-Use "MoveKey" from above
-
-Loop from i = (0 - 31) inclusive doing:
-
-Set InverseKey at (MoveKey at i) to i
-
-end Loop
 
 Pseudo Code:
 
-    inversekey = [0, 0, 0, 0, 0, ... , 0];//32 0s
-    movekey = [MOVEKEY];
-    for (int i = 0; i < 32; i++) {
-        inversekey[movekey[i]] = i;
-    }
-You could use the InverseMoveKey to do the same mapping on the encrypted bits to get the decrypted bits if you would so like to.
+    bool[32] inBytes = [...];
+	bool[32] outBytes;
+	for (int i = 0; i < 32; i++) {
+		outBytes[movekey[i]] = inBytes[i];
+	}
+   
 
-Simplified Version (AKA: TL;DR)
+The first byte in the test string is mapped to the 19th byte in the output, the second to the 7th, and so on.
 
-Create MoveKey from Password
-Map bytes in four byte blocks to new positions using MoveKey
+This process is repeated until the end of the file is reached.
+
+Note that a new hash is generated from the SHA-256 of the previous hash to generate a new, unique Move Key on each pass.
+
+If the file does not have bytes that are a multiple of four, a Move Key for only 1, 2, or 3 bytes can be substituted for the 4 byte Move Key.
+
+#Decryption
+
+Decryption is similar to encryption except it uses the inverse Move Key.
+
+Since the Move Key is one-to-one on [0-31], the "inverse" version of it can be calculated by taking where each index was mapped to and using that as the index to map from and the index as where to map to. This is similar to finding the f^-1 for f.
+
+Example:
+
+Using the same Move Key as in the previous example
+
+    [
+        18, 06, 03, 17, 15, 21, 09, 25,
+        22, 16, 07, 23, 31, 24, 26, 20, 
+        04, 29, 14, 30, 02, 12, 11, 27, 
+        01, 13, 00, 19, 28, 10, 08, 05
+    ]
+
+Its inverse can be calculated and it is 
+
+    [
+        26, 24, 20, 02, 16, 31, 01, 10,
+        30, 06, 29, 22, 21, 25, 18, 04,
+        09, 03, 08, 27, 15, 07, 05, 11,
+        13, 00, 14, 23, 28, 17, 19, 12
+    ]
+
+Then simply use the "inverse" Move Key in the same way that was done with the "regular" Move Key but on the encrypted bytes
+
+Example:
+
+Using the inverse Move Key as calculated before and encrypted version of "test"
+
+    1 0 0 1 0 0 1 1
+    0 0 1 1 0 0 1 1
+    1 1 0 1 1 1 0 0
+    1 0 0 1 0 1 1 0
+
+Then gets mapped back to
+
+    0 1 1 1 0 1 0 0
+    0 1 1 0 0 1 0 1
+    0 1 1 1 0 0 1 1
+    0 1 1 1 0 1 0 0
+
+Which is the same as "test" and thus the algorithm worked.
+
+    t: 0 1 1 1 0 1 0 0
+    e: 0 1 1 0 0 1 0 1
+    s: 0 1 1 1 0 0 1 1
+    t: 0 1 1 1 0 1 0 0
+
+This can be repeated in the same way as the encryption algorithm for files of any size by creating new hashes and more "inverse" Move Keys as needed.
+
+$Simplified Version (AKA TL;DR)
+
+Create Move Key from Password
+Map bytes in four byte blocks to new positions using Move Key
 Create New MoveKey from Hash and repeat.
-Decrypt by using the inverse of the movekey to map the encrypted blocks to the decrypted positions.
-Personally I like to call the algorithm the "Steaming Soup" algorithm because when you draw lines from the decrypted bits to the encrypted bits, it looks similar to steam coming off a cup of hot liquid.
+Decrypt by using the inverse of the Move Key to map the encrypted blocks back to their decrypted positions.
+
+I find my algorithm interesting because the encrypted file is always the exact same length as the encrypted file.
 
 I could not break this encryption myself but as Schneier says, "Anyone, from the most clueless amateur to the best cryptographer, can create an algorithm that he himself can't break." (Schneier's Law)
 
-There are some special cases where this encryption fails and those include the following:
+#Shortcomings
 
-When the bytes being encrypted are all 0 or all 1, this algorithm will do nothing to the bytes.
+There are some shortcomings where my algorithm fails including the following cases:
 
-When the bytes being encrypted have sparse changes i.e. one 1 per 100 0s, the encryption may have blocks equal to the decrypted blocks.
+When the bytes being encrypted are all 0 or all 1, this algorithm will do nothing to the bytes as it just remaps them.
+
+When the bytes being encrypted have sparse changes (i.e. one 1 per 127 0s), the encryption may have blocks equal to the decrypted blocks for the same reason as the previous.
+
+These problems are caused by the fact that in this algorithm, the output bytes have the exact same number of 1 and 0 bits as the input bytes.
+
+A workaround to both of these would be to add an extra fifth byte per each four byte block with "randomly" filled bits as extra data for each runthrough of a Move Key. In this case, the Move Key would move the original four bytes to an output of five bytes and then the rest of the bits that were not set by the move key would be set to random values. The trouble with this workaround is that the output file would be 1.25x as large as the input file.
+
+#Other Thoughts
+
+The mapping by blocks method works well but could be changed to be mapping by the whole file. In this case, a Move Key would map each bit of the file to a new location in the output file rather than doing it four bytes at a time. In this way, a bit from the beginning of the file could be moved to any place in the file rather than just the first four bytes of it.
