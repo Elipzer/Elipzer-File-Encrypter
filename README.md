@@ -136,8 +136,8 @@ Its inverse can be calculated and it is
     [
         26, 24, 20, 02, 16, 31, 01, 10,
         30, 06, 29, 22, 21, 25, 18, 04,
-        09, 03, 08, 27, 15, 07, 05, 11,
-        13, 00, 14, 23, 28, 17, 19, 12
+        09, 03, 00, 27, 15, 05, 08, 11,
+        13, 07, 14, 23, 28, 17, 19, 12
     ]
 
 Then simply use the "inverse" Move Key in the same way that was done with the "regular" Move Key but on the encrypted bytes
